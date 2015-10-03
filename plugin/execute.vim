@@ -5,6 +5,7 @@
 " TODO use dispatch if available?
 " TODO warn user if a packaging system is not available e.g lein repl/tmux
 " TODO extract <Leader> y behaviour too (+ nvim behaviour)
+" TODO check for tooling-force.jar with apex functions
 
 " if exists('g:loaded_execute')
 "   finish
@@ -158,8 +159,85 @@ endfunction
 
 " }}}
 
+" NeoVim & Tmux {{{1
+
+if has("nvim")
+  map <Leader>y :belowright 15split \| term<CR>
+
+  " Alt + l is useful for escaping...
+  imap <A-l> <esc>
+
+  " <BS> == <C-h> currently
+  map <BS> <C-\><C-n><C-w>h
+
+  " Navigation from Terminal Mode
+  tmap <A-l> <C-\><C-n>
+  tmap <C-j> <C-\><C-n><C-w>j
+  tmap <C-k> <C-\><C-n><C-w>k
+  tmap <esc> <C-\><C-n>
+
+else
+  set cryptmethod=blowfish2 " most secure option available as of 7.4
+  if len($TMUX) != 0
+
+    map <Leader>y :silent !tmux splitw -v -p 25<CR>
+    nnoremap <silent> <C-j> :call TmuxNavigate('j')<cr>
+    nnoremap <silent> <C-k> :call TmuxNavigate('k')<cr>
+  else
+    map <Leader>y :echo "This isn't NeoVim, you can't do that here."<CR>
+  endif
+endif
+
+function! VimNavigate(direction)
+  try
+    execute 'wincmd ' . a:direction
+  catch
+    echohl ErrorMsg | echo 'E11: Invalid in command-line window; <CR> executes, CTRL-C quits: wincmd k' | echohl None
+  endtry
+endfunction
+
+" Copied from christoomey's vim-tmux-navigator
+function! TmuxNavigate(direction)
+  let nr = winnr()
+  let tmux_last_pane = (a:direction == 'p' && s:tmux_is_last_pane)
+  if !tmux_last_pane
+    call VimNavigate(a:direction)
+  endif
+  " Forward the switch panes command to tmux if:
+  " a) we're toggling between the last tmux pane;
+  " b) we tried switching windows in vim but it didn't have effect.
+  if tmux_last_pane || nr == winnr()
+    let cmd = 'tmux select-pane -' . tr(a:direction, 'phjkl', 'lLDUR')
+    silent call system(cmd)
+    let s:tmux_is_last_pane = 1
+  else
+    let s:tmux_is_last_pane = 0
+  endif
+endfunction
+
+
+" }}}1
+
 command! Execute :call Execute()
 command! Test :call Test()
 command! TestSingle :call TestSingle()
 command! Repl :call Repl()
 command! G :call s:movegitroot()
+
+" Code execution {{{1
+
+function! ApexDeployCurrent()
+  let term = s:getterm()
+  let newFile = substitute(expand('%'), $HOME . 'Workspace/Singletrack-Core/SingletrackDev','','')
+  exec ':!echo -e "' . newFile . '\n' . newFile . '-meta.xml" > /tmp/currentFile'
+  exec term . 'java -jar ' . $HOME . '/dotfiles/tooling-force.com-0.3.4.0.jar
+        \ --action=deploySpecificFiles
+        \ --config=' . $HOME . '/notes/SingletrackDev.properties
+        \ --projectPath=' . $HOME . '/Workspace/Singletrack-Core/SingletrackDev
+        \ --responseFilePath=/tmp/responseFile
+        \ --specificFiles=/tmp/currentFile
+        \ --ignoreConflicts=true
+        \ --pollWaitMillis=1000'
+endfunction
+
+" }}}1
