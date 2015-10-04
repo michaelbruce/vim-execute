@@ -159,34 +159,55 @@ endfunction
 
 " }}}
 
+" Shell {{{
+
+function! Shell()
+  if has("nvim")
+    exec ':belowright 15split | term'
+  else
+    if len($TMUX) != 0
+      exec 'silent !tmux splitw -v -p 25'
+    else
+      exec 'echo "You can't do that here."'
+    endif
+  endif
+endf
+
+" }}}
+
 " NeoVim & Tmux {{{1
 
-if has("nvim")
-  map <Leader>y :belowright 15split \| term<CR>
-
-  " Alt + l is useful for escaping...
-  imap <A-l> <esc>
-
-  " <BS> == <C-h> currently
-  map <BS> <C-\><C-n><C-w>h
-
-  " Navigation from Terminal Mode
-  tmap <A-l> <C-\><C-n>
-  tmap <C-j> <C-\><C-n><C-w>j
-  tmap <C-k> <C-\><C-n><C-w>k
-  tmap <esc> <C-\><C-n>
-
-else
-  set cryptmethod=blowfish2 " most secure option available as of 7.4
-  if len($TMUX) != 0
-
-    map <Leader>y :silent !tmux splitw -v -p 25<CR>
-    nnoremap <silent> <C-j> :call TmuxNavigate('j')<cr>
-    nnoremap <silent> <C-k> :call TmuxNavigate('k')<cr>
-  else
-    map <Leader>y :echo "This isn't NeoVim, you can't do that here."<CR>
-  endif
+if len($TMUX) != 0
+  nnoremap <silent> <C-j> :call TmuxNavigate('j')<cr>
+  nnoremap <silent> <C-k> :call TmuxNavigate('k')<cr>
 endif
+
+" if has("nvim")
+"   map <Leader>y :belowright 15split \| term<CR>
+"
+"   " Alt + l is useful for escaping...
+"   imap <A-l> <esc>
+"
+"   " <BS> == <C-h> currently
+"   map <BS> <C-\><C-n><C-w>h
+"
+"   " Navigation from Terminal Mode
+"   tmap <A-l> <C-\><C-n>
+"   tmap <C-j> <C-\><C-n><C-w>j
+"   tmap <C-k> <C-\><C-n><C-w>k
+"   tmap <esc> <C-\><C-n>
+"
+" else
+"   set cryptmethod=blowfish2 " most secure option available as of 7.4
+"   if len($TMUX) != 0
+"
+"     map <Leader>y :silent !tmux splitw -v -p 25<CR>
+"     nnoremap <silent> <C-j> :call TmuxNavigate('j')<cr>
+"     nnoremap <silent> <C-k> :call TmuxNavigate('k')<cr>
+"   else
+"     map <Leader>y :echo "This isn't NeoVim, you can't do that here."<CR>
+"   endif
+" endif
 
 function! VimNavigate(direction)
   try
@@ -222,6 +243,7 @@ command! Execute :call Execute()
 command! Test :call Test()
 command! TestSingle :call TestSingle()
 command! Repl :call Repl()
+command! Shell :call Shell()
 command! G :call s:movegitroot()
 
 " Code execution {{{1
