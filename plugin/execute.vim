@@ -7,9 +7,9 @@
 " TODO extract <Leader> y behaviour too (+ nvim behaviour)
 " TODO check for tooling-force.jar with apex functions
 
-" if exists('g:loaded_execute')
-"   finish
-" endif
+if exists('g:loaded_execute')
+  finish
+endif
 
 let g:loaded_execute = 1
 
@@ -246,16 +246,24 @@ command! Repl :call Repl()
 command! Shell :call Shell()
 command! G :call s:movegitroot()
 
+if exists('g:execute_default_keybindings')
+  map <Leader>e :Execute<CR>
+  map <Leader>r :Repl<CR>
+  map <Leader>t :Test<CR>
+  map <Leader>o :TestSingle<cr>
+  map <Leader>y :Shell<cr>
+endif
+
 " Code execution {{{1
 
 function! ApexDeployCurrent()
   let term = s:getterm()
-  let newFile = substitute(expand('%'), $HOME . 'Workspace/Singletrack-Core/SingletrackDev','','')
+  let newFile = substitute(expand('%'), $HOME . g:execute_forcecom_path,'','')
   exec ':!echo -e "' . newFile . '\n' . newFile . '-meta.xml" > /tmp/currentFile'
-  exec term . 'java -jar ' . $HOME . '/dotfiles/tooling-force.com-0.3.4.0.jar
+  exec term . 'java -jar ' . $HOME . g:execute_forcecom_tool_path . '
         \ --action=deploySpecificFiles
-        \ --config=' . $HOME . '/notes/SingletrackDev.properties
-        \ --projectPath=' . $HOME . '/Workspace/Singletrack-Core/SingletrackDev
+        \ --config=' . $HOME . g:execute_forcecom_config. '
+        \ --projectPath=' . $HOME . g:execute_forcecom_path .'
         \ --responseFilePath=/tmp/responseFile
         \ --specificFiles=/tmp/currentFile
         \ --ignoreConflicts=true
