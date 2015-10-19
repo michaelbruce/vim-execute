@@ -96,7 +96,8 @@ function! Test()
   elseif (&ft == 'python')
     exec term . 'python -m unittest %'
   elseif (&ft == 'java')
-    exec term . 'java -cp .:/usr/share/java/junit.jar org.junit.runner.JUnitCore %'
+    exec term . 'mvn test -e -Dtest=%:t:r'
+    " exec term . 'java -cp .:/usr/share/java/junit.jar org.junit.runner.JUnitCore %'
   elseif (&ft == 'visualforce' || &ft == 'apexcode')
     exec ':ApexTest'
   elseif (&ft == 'vim')
